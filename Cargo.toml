@@ -1,0 +1,23 @@
+[package]
+authors = ["Henrik Tougaard <henrik@adaptagency.com>"]
+name = "axum-otlp-honeycomb"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+opentelemetry-otlp = { version = "0.26.0", features = [
+    "reqwest-client",
+    "reqwest-rustls",
+    "http-proto",
+    "tls-roots",
+] }
+opentelemetry = { version = "0.26", features = [
+    "trace",
+], default-features = false }
+opentelemetry_sdk = { version = "0.26.0", features = ["tracing", "rt-tokio"] }
+tracing-opentelemetry = "0.27.0"
+tracing-core = "0.1.28"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+axum-tracing-opentelemetry = { version = "0.21.1", features = [
+    "tracing_level_info",
+] }

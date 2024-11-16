@@ -1,12 +1,13 @@
 //! Crate for connecting tracing in Axum via the Opengtelemetry-otlp
 //! protocol to Honeycomb.
 
-use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use opentelemetry::trace::TracerProvider;
 use std::env;
 use tracing_core::Subscriber;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::registry::LookupSpan;
+mod axum_layer;
+pub use axum_layer::opentelemetry_tracing_layer;
 
 /// Creates a layer that can be added to a `tracing_subscriber`like this
 ///
@@ -70,20 +71,4 @@ fn create_otlp_tracer() -> Option<opentelemetry_sdk::trace::Tracer> {
             .unwrap()
             .tracer(""),
     )
-}
-
-/// Creates a new tracing span
-///
-/// Just axum-tracing-opentelemetry's struct for now
-#[must_use]
-pub fn opentelemetry_tracing_layer() -> OtelAxumLayer {
-    OtelAxumLayer::default()
-}
-
-/// Injects the context into the response
-///
-/// Just axum-tracing-opentelemetry's struct for now
-#[must_use]
-pub fn response_with_trace_layer() -> OtelInResponseLayer {
-    OtelInResponseLayer {}
 }

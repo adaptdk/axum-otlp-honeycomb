@@ -49,14 +49,13 @@ is set by the `RUST_LOG` environment variable.
 
 In your app add this:
 ```
-use axum_otlp_honeycomb::{opentelemetry_tracing_layer, response_with_trace_layer};
+use axum_otlp_honeycomb::{opentelemetry_tracing_layer};
 
 ...
 
     let app = Router::new()
     ...
-    .layer(opentelemetry_tracing_layer())
-    .layer(response_with_trace_layer());
+    .layer(opentelemetry_tracing_layer());
 ```
 
 ## Issues

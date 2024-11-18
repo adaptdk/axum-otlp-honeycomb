@@ -91,7 +91,7 @@ fn make_span<B>(req: &Request<B>) -> Span {
         server.address = http_host(req),
         // server.port = req.uri().port(),
         http.client.address = Empty, //%$request.connection_info().realip_remote_addr().unwrap_or(""),
-        http.headers = ?req.headers(),
+        http.headers = headers(req),
         user_agent.original = user_agent(req),
         http.response.status_code = Empty, // to be set on response
         url.path = req.uri().path(),
@@ -103,10 +103,22 @@ fn make_span<B>(req: &Request<B>) -> Span {
         request_id = Empty, // to be set
         exception.message = Empty, // to be set on response
         user.id = "-", // to be set when user-id is found
+        service.name = clap::crate_name!(),
     );
     // TODO: Set context in trace - this does not work as intended - or at all :(
     span.set_parent(extract_context(req));
     span
+}
+
+/// Get (and filter) request headers
+fn headers<B>(req: &Request<B>) -> String {
+    let filtered_headers: HeaderMap<HeaderValue> = req
+        .headers()
+        .iter()
+        .filter(|(name, _)| *name != "authorization" && *name != "idtoken")
+        .map(|(n, v)| (n.clone(), v.clone()))
+        .collect();
+    format!("{filtered_headers:#?}")
 }
 
 #[inline]

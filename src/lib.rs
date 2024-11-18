@@ -38,8 +38,7 @@ where
     );
     env::set_var(
         "OTEL_SERVICE_NAME",
-        env::var("OTEL_SERVICE_NAME")
-            .unwrap_or(env::var("CARGO_PKG_NAME").unwrap_or("unknown".to_string())),
+        env::var("OTEL_SERVICE_NAME").unwrap_or(clap::crate_name!().to_string()),
     );
 
     opentelemetry::global::set_text_map_propagator(

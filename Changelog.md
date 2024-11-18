@@ -1,3 +1,10 @@
+## v0.1.4
+Released 2024-11-18
+
+* Move setting `OTEL_SERVICE_NAME` and `OTEL_EXPORTER_OTLP_ENDPOINT`
+from inside `init_otlp_layer` to the caller, so `clap::crate_name!()`
+gets the correct value for service.name.
+
 ## v0.1.3
 Released 2024-11-18
 

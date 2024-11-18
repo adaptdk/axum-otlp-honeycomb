@@ -9,9 +9,8 @@ The following environment variables are used:
  *  `HONEYCOMB_API_KEY` contains
      the API key for the Honeycomb environment that traces should be sent to
  *  `OTEL_EXPORTER_OTLP_ENDPOINT` contains the endpoint for Honeycomb -
-     default is `https://api.eu1.honeycomb.io/`
- *  `OTEL_SERVICE_NAME` contains the service name. Defaults to the package
-     name from Cargo.toml
+     could be `https://api.eu1.honeycomb.io/`
+ *  `OTEL_SERVICE_NAME` contains the service name.
 
 Only `HONEYCOMB_API_KEY` is required.
 
@@ -21,6 +20,7 @@ Do the following to add the crates to your Cargo.toml:
 
 ```
 cargo add axum-otlp-honeycomb --git https://github.com/adaptdk/axum-otlp-honeycomb.git
+cargo add clap --features cargo
 ```
 
 ### Tracing_subscriber
@@ -30,8 +30,18 @@ Where you create your tracing_subscriber do this:
 use axum_otlp_honeycomb::init_otlp_layer;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, util::SubscriberInitExt, Layer};
-
+use std::env;
 ...
+
+env::set_var(
+    "OTEL_SERVICE_NAME",
+    env::var("OTEL_SERVICE_NAME").unwrap_or(clap::crate_name!().to_string()),
+);
+env::set_var(
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
+        .unwrap_or("https://api.eu1.honeycomb.io/".to_string()),
+);
 
 tracing_subscriber::Registry::default()
     .with(

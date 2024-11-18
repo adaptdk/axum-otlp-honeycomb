@@ -103,7 +103,6 @@ fn make_span<B>(req: &Request<B>) -> Span {
         request_id = Empty, // to be set
         exception.message = Empty, // to be set on response
         user.id = "-", // to be set when user-id is found
-        service.name = clap::crate_name!(),
     );
     // TODO: Set context in trace - this does not work as intended - or at all :(
     span.set_parent(extract_context(req));

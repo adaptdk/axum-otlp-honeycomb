@@ -2,7 +2,6 @@
 //! protocol to Honeycomb.
 
 use opentelemetry::trace::TracerProvider;
-use std::env;
 use tracing_core::Subscriber;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::registry::LookupSpan;
@@ -12,7 +11,7 @@ pub use axum_layer::opentelemetry_tracing_layer;
 /// Creates a layer that can be added to a `tracing_subscriber`like this
 ///
 /// ```
-///     tracing_subscriber::Registry::default()
+/// tracing_subscriber::Registry::default()
 ///    .with(init_otlp_layer().with_filter(LevelFilter::INFO))
 ///    .init();
 /// ```
@@ -24,23 +23,12 @@ pub use axum_layer::opentelemetry_tracing_layer;
 /// *  `HONEYCOMB_API_KEY` contains
 ///     the API key for the Honeycomb environment that traces should be sent to
 /// *  `OTEL_EXPORTER_OTLP_ENDPOINT` contains the endpoint for Honeycomb -
-///     default is `https://api.eu1.honeycomb.io/`
-/// *  `OTEL_SERVICE_NAME` contains the service name. Defaults to the package
-///     name from Cargo.toml
+///     eg `https://api.eu1.honeycomb.io/`
+/// *  `OTEL_SERVICE_NAME` contains the service name - eg `clap::crate_name!()`.
 pub fn init_otlp_layer<S>() -> Option<OpenTelemetryLayer<S, opentelemetry_sdk::trace::Tracer>>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
 {
-    env::set_var(
-        "OTEL_EXPORTER_OTLP_ENDPOINT",
-        env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
-            .unwrap_or("https://api.eu1.honeycomb.io/".to_string()),
-    );
-    env::set_var(
-        "OTEL_SERVICE_NAME",
-        env::var("OTEL_SERVICE_NAME").unwrap_or(clap::crate_name!().to_string()),
-    );
-
     opentelemetry::global::set_text_map_propagator(
         opentelemetry_sdk::propagation::TraceContextPropagator::new(),
     );

@@ -67,6 +67,11 @@ use axum_otlp_honeycomb::{opentelemetry_tracing_layer};
     ...
     .layer(opentelemetry_tracing_layer());
 ```
+or, if you don't want to extract the parent context:
+```
+    .layer(opentelemetry_tracing_layer_without_parent());
+```
+
 
 ## Issues
 

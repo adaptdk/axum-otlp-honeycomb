@@ -6,7 +6,7 @@ use tracing_core::Subscriber;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::registry::LookupSpan;
 mod axum_layer;
-pub use axum_layer::opentelemetry_tracing_layer;
+pub use axum_layer::{opentelemetry_tracing_layer, opentelemetry_tracing_layer_without_parent};
 
 /// Creates a layer that can be added to a `tracing_subscriber`like this
 ///

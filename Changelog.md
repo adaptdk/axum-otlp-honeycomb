@@ -1,3 +1,8 @@
+## v0.1.5
+Released 2024-11-19
+
+* Add method to create otlp-layer without extracting the parent trace-context
+
 ## v0.1.4
 Released 2024-11-18
 

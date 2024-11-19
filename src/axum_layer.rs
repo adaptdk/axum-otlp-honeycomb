@@ -15,8 +15,21 @@ use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 /// function to create the tracing layer
 #[must_use]
+#[allow(unused)]
 pub fn opentelemetry_tracing_layer() -> AxumOtelLayer {
-    AxumOtelLayer::default()
+    AxumOtelLayer {
+        extract_parent: true,
+    }
+}
+
+/// function to create the tracing layer without
+/// extraction of parent span
+#[must_use]
+#[allow(unused)]
+pub fn opentelemetry_tracing_layer_without_parent() -> AxumOtelLayer {
+    AxumOtelLayer {
+        extract_parent: false,
+    }
 }
 
 /// layer/middleware for axum:
@@ -26,18 +39,24 @@ pub fn opentelemetry_tracing_layer() -> AxumOtelLayer {
 ///
 /// `OpenTelemetry` context is extracted from tracing's span.
 #[derive(Default, Debug, Clone)]
-pub struct AxumOtelLayer {}
+pub struct AxumOtelLayer {
+    extract_parent: bool,
+}
 
 impl<S> tower::Layer<S> for AxumOtelLayer {
     /// The wrapped service
     type Service = AxumOtelService<S>;
     fn layer(&self, inner: S) -> Self::Service {
-        AxumOtelService { inner }
+        AxumOtelService {
+            extract_parent: self.extract_parent,
+            inner,
+        }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct AxumOtelService<S> {
+    extract_parent: bool,
     inner: S,
 }
 
@@ -62,7 +81,7 @@ where
     fn call(&mut self, req: Request<B>) -> Self::Future {
         let start = Instant::now();
         let req = req;
-        let span = make_span(&req);
+        let span = make_span(&req, self.extract_parent);
 
         let future = {
             // should this be a call to instrument() instead of enter() ??
@@ -79,7 +98,7 @@ where
 }
 
 /// Create a tracing-span from a Request
-fn make_span<B>(req: &Request<B>) -> Span {
+fn make_span<B>(req: &Request<B>, extract_parent: bool) -> Span {
     let route = http_route(req);
     let method = req.method().as_str();
 
@@ -104,8 +123,9 @@ fn make_span<B>(req: &Request<B>) -> Span {
         exception.message = Empty, // to be set on response
         user.id = "-", // to be set when user-id is found
     );
-    // TODO: Set context in trace - this does not work as intended - or at all :(
-    span.set_parent(extract_context(req));
+    if extract_parent {
+        span.set_parent(extract_context(req))
+    }
     span
 }
 

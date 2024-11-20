@@ -1,7 +1,9 @@
 //! Crate for connecting tracing in Axum via the Opengtelemetry-otlp
 //! protocol to Honeycomb.
 
-use opentelemetry::trace::TracerProvider;
+use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_otlp::{SpanExporter, WithHttpConfig};
+use opentelemetry_sdk::{self as sdk, trace::Tracer};
 use tracing_core::Subscriber;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::registry::LookupSpan;
@@ -25,7 +27,7 @@ pub use axum_layer::{opentelemetry_tracing_layer, opentelemetry_tracing_layer_wi
 /// *  `OTEL_EXPORTER_OTLP_ENDPOINT` contains the endpoint for Honeycomb -
 ///     eg `https://api.eu1.honeycomb.io/`
 /// *  `OTEL_SERVICE_NAME` contains the service name - eg `clap::crate_name!()`.
-pub fn init_otlp_layer<S>() -> Option<OpenTelemetryLayer<S, opentelemetry_sdk::trace::Tracer>>
+pub fn init_otlp_layer<S>() -> Option<OpenTelemetryLayer<S, Tracer>>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
 {
@@ -33,29 +35,27 @@ where
         opentelemetry_sdk::propagation::TraceContextPropagator::new(),
     );
 
-    create_otlp_tracer().map(|t| {
-        tracing_opentelemetry::layer()
-            .with_error_records_to_exceptions(true)
-            .with_tracer(t)
-    })
-}
-
-fn create_otlp_tracer() -> Option<opentelemetry_sdk::trace::Tracer> {
     #[allow(clippy::expect_used)] // Should panic as we cannot continue
     let headers = vec![(
         "x-honeycomb-team".to_string(),
         std::env::var("HONEYCOMB_API_KEY").expect("Env var HONEYCOMB_API_KEY missing"),
     )];
-    let exporter = opentelemetry_otlp::new_exporter()
-        .http()
-        .with_headers(headers.into_iter().collect());
-    let tracer = opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(exporter);
-    Some(
-        tracer
-            .install_batch(opentelemetry_sdk::runtime::Tokio)
-            .unwrap()
-            .tracer(""),
-    )
+    let exporter = SpanExporter::builder()
+        .with_http()
+        .with_headers(headers.into_iter().collect())
+        .build();
+
+    if exporter.is_err() {
+        None
+    } else {
+        let provider = sdk::trace::TracerProvider::builder()
+            .with_batch_exporter(exporter.unwrap(), opentelemetry_sdk::runtime::Tokio)
+            .build();
+        let tracer = provider.tracer("axum-otlp-honeycomb");
+
+        let l = tracing_opentelemetry::layer()
+            .with_error_records_to_exceptions(true)
+            .with_tracer(tracer);
+        Some(l)
+    }
 }

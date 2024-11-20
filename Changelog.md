@@ -1,6 +1,15 @@
 ## v0.1.6
 Released 2024-11-20
 
+* Update `opentelemetry`to version 0.27.0
+
+No changes to the API.
+
+* Describe how to add tracing to reqwest clients.
+
+## v0.1.6
+Released 2024-11-20
+
 * Use only version 0.26 of the opentelemetry crates.
 
 ## v0.1.5

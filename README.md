@@ -72,6 +72,33 @@ or, if you don't want to extract the parent context:
     .layer(opentelemetry_tracing_layer_without_parent());
 ```
 
+## Tracing client requests with reqwest
+
+This is done using the `reqwest-tracing` crate:
+```
+cargo add reqwest-tracing
+cargo add reqwest-middleware --features json
+```
+And then you add the middleware-layer to the reqwest-client:
+
+Change:
+```
+let client: Client = Client::builder()
+    ...
+    build()?;
+```
+to:
+```
+let reqwest_client: Client = Client::builder()
+    ...
+    build()?;
+let client = reqwest_middleware::ClientBuilder::new(reqwest_client)
+    .with(tracing_middleware)
+    .build();
+```
+And change all occurencies of `Client` to `ClientWithMiddleware` and
+of `reqwest::Client` to `reqwest_middleware::ClientWithMiddleware`.
+
 
 ## Issues
 

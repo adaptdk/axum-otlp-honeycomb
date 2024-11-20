@@ -1,7 +1,7 @@
 [package]
 authors = ["Henrik Tougaard <henrik@adaptagency.com>"]
 name = "axum-otlp-honeycomb"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 
 [dependencies]
@@ -23,6 +23,6 @@ http = "1"
 tower = "0.5"
 tracing = "0.1"
 futures-util = "0.3"
-opentelemetry-http = "0.27"
+opentelemetry-http = "0.26"
 axum = "0.7"
 clap = { version = "4", features = ["cargo"] }

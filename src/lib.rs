@@ -3,7 +3,10 @@
 
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_otlp::{SpanExporter, WithHttpConfig};
-use opentelemetry_sdk::{self as sdk, trace::Tracer};
+use opentelemetry_sdk::{
+    self as sdk,
+    trace::{Config, Sampler, Tracer},
+};
 use tracing_core::Subscriber;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::registry::LookupSpan;
@@ -13,10 +16,14 @@ pub use axum_layer::{opentelemetry_tracing_layer, opentelemetry_tracing_layer_wi
 /// Creates a layer that can be added to a `tracing_subscriber`like this
 ///
 /// ```
+/// let sample_rate = 0.01;  // 1%
 /// tracing_subscriber::Registry::default()
-///    .with(init_otlp_layer().with_filter(LevelFilter::INFO))
+///    .with(init_otlp_layer(sample_rate).with_filter(LevelFilter::INFO))
 ///    .init();
 /// ```
+///
+/// The `sample_rate` is the fraction of traces that should be sent to Honeycomb.
+/// 1.0 is all traces.
 ///
 /// Also sets a `text_map_propagator` to enable propagation
 /// of context between services.
@@ -27,7 +34,7 @@ pub use axum_layer::{opentelemetry_tracing_layer, opentelemetry_tracing_layer_wi
 /// *  `OTEL_EXPORTER_OTLP_ENDPOINT` contains the endpoint for Honeycomb -
 ///     eg `https://api.eu1.honeycomb.io/`
 /// *  `OTEL_SERVICE_NAME` contains the service name - eg `clap::crate_name!()`.
-pub fn init_otlp_layer<S>() -> Option<OpenTelemetryLayer<S, Tracer>>
+pub fn init_otlp_layer<S>(sample_rate: f64) -> Option<OpenTelemetryLayer<S, Tracer>>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
 {
@@ -50,6 +57,11 @@ where
     } else {
         let provider = sdk::trace::TracerProvider::builder()
             .with_batch_exporter(exporter.unwrap(), opentelemetry_sdk::runtime::Tokio)
+            .with_config(
+                Config::default().with_sampler(Sampler::ParentBased(Box::new(
+                    Sampler::TraceIdRatioBased(sample_rate),
+                ))),
+            )
             .build();
         let tracer = provider.tracer("axum-otlp-honeycomb");
 

@@ -1,3 +1,12 @@
+## v0.2.0
+Released 2024-11-21
+
+* Breaking: Added `sample_rate` argument to `init_otlp_layer`.
+
+Sets the fraction of trtaces that are sampled and forwarded to Honeycomb.
+
+* Added `.gitignore`
+
 ## v0.1.6
 Released 2024-11-20
 

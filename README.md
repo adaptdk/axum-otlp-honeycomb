@@ -43,13 +43,15 @@ env::set_var(
         .unwrap_or("https://api.eu1.honeycomb.io/".to_string()),
 );
 
+// Collect 1% of traces on production, all traces elsewhere:
+let sample_rate = if branch == "main" { 0.01 } else { 1.0 };
 tracing_subscriber::Registry::default()
     .with(
         tracing_subscriber::fmt::layer()
             .with_ansi(false)
             .with_filter(EnvFilter::from_default_env()),
     )
-    .with(init_otlp_layer().with_filter(LevelFilter::INFO))
+    .with(init_otlp_layer(sample_rate).with_filter(LevelFilter::INFO))
     .init();
 ```
 The first `.with` is for local logging to eg Platform.sh's `app.log`. The log-level

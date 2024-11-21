@@ -2,7 +2,7 @@
 //! protocol to Honeycomb.
 
 use opentelemetry::trace::TracerProvider as _;
-use opentelemetry_otlp::{SpanExporter, WithHttpConfig};
+use opentelemetry_otlp::SpanExporter;
 use opentelemetry_sdk::{
     self as sdk,
     trace::{Config, Sampler, Tracer},

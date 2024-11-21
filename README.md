@@ -11,7 +11,7 @@ The following environment variables are used:
  *  `OTEL_EXPORTER_OTLP_HEADERS` contains the headers for the Honeycomb endpoint should have `x-honeycomb-team`
  *  `OTEL_SERVICE_NAME` contains the service name.
 
-Only `OTEL_EXPORTER_OTLP_HEADERS` is required. All can be copied from the Send data page in Honeycomb.
+All are required but the first two can be copied from the Send data page in Honeycomb.
 
 ## Add to your code
 

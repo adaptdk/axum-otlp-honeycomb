@@ -42,15 +42,7 @@ where
         opentelemetry_sdk::propagation::TraceContextPropagator::new(),
     );
 
-    #[allow(clippy::expect_used)] // Should panic as we cannot continue
-    let headers = vec![(
-        "x-honeycomb-team".to_string(),
-        std::env::var("HONEYCOMB_API_KEY").expect("Env var HONEYCOMB_API_KEY missing"),
-    )];
-    let exporter = SpanExporter::builder()
-        .with_http()
-        .with_headers(headers.into_iter().collect())
-        .build();
+    let exporter = SpanExporter::builder().with_http().build();
 
     if exporter.is_err() {
         None

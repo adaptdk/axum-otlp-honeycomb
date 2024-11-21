@@ -6,13 +6,12 @@ Creates a connection from an Axum server to a Honeycomb collector.
 
 The following environment variables are used:
 
- *  `HONEYCOMB_API_KEY` contains
-     the API key for the Honeycomb environment that traces should be sent to
  *  `OTEL_EXPORTER_OTLP_ENDPOINT` contains the endpoint for Honeycomb -
      could be `https://api.eu1.honeycomb.io/`
+ *  `OTEL_EXPORTER_OTLP_HEADERS` contains the headers for the Honeycomb endpoint should have `x-honeycomb-team`
  *  `OTEL_SERVICE_NAME` contains the service name.
 
-Only `HONEYCOMB_API_KEY` is required.
+Only `OTEL_EXPORTER_OTLP_HEADERS` is required. All can be copied from the Send data page in Honeycomb.
 
 ## Add to your code
 

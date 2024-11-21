@@ -28,14 +28,19 @@ Where you create your tracing_subscriber do this:
 ```
 use axum_otlp_honeycomb::init_otlp_layer;
 use tracing::level_filters::LevelFilter;
-use tracing_subscriber::{filter::EnvFilter, layer::SubscriberExt, util::SubscriberInitExt, Layer};
+use tracing_subscriber::filter::EnvFilter;
+use tracing_subscriber::prelude::*;
 use std::env;
 ...
 
+// Set the service-name to the crates name from Cargo.toml, allow override
+// from environment variable
 env::set_var(
     "OTEL_SERVICE_NAME",
     env::var("OTEL_SERVICE_NAME").unwrap_or(clap::crate_name!().to_string()),
 );
+// Default the Honeycomb endpoint to EU, allow override from environment
+// variable
 env::set_var(
     "OTEL_EXPORTER_OTLP_ENDPOINT",
     env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
@@ -72,6 +77,24 @@ or, if you don't want to extract the parent context:
 ```
     .layer(opentelemetry_tracing_layer_without_parent());
 ```
+
+#### Headers
+
+In the traces sent to Honeycomb the following headers will be removed:
+* authorization
+* cookie
+* and any header whose name contains 'token'
+
+#### User id
+
+Also a field `user.id` is created in the root-span, to allow authorization code to
+record the user-id by eg:
+```
+let user_ud = get_current_user_id();
+Span::current().record("user.id", user_id);
+```
+Note that the current span needs to be the root span for the server
+otherwise the `record()` call will fail silently.
 
 ## Tracing client requests with reqwest
 

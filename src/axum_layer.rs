@@ -104,24 +104,20 @@ fn make_span<B>(req: &Request<B>, extract_parent: bool) -> Span {
 
     let span = info_span!(
         "HTTP request",
-        http.request.method = method,
-        http.route = route,
-        // network.protocol.version = %http_flavor(req.version()),
-        server.address = http_host(req),
-        // server.port = req.uri().port(),
-        http.client.address = Empty, //%$request.connection_info().realip_remote_addr().unwrap_or(""),
+        exception.message = Empty, // to be set on response
         http.headers = headers(req),
-        user_agent.original = user_agent(req),
+        http.request.method = method,
         http.response.status_code = Empty, // to be set on response
+        http.route = route,
+        otel.kind = ?opentelemetry::trace::SpanKind::Server,
+        otel.name = format!("{method} {route}"),
+        otel.status_code = Empty, // to be set on response
+        server.address = http_host(req),
+        trace_id = Empty, // to be set on response
         url.path = req.uri().path(),
         url.query = req.uri().query(),
-        otel.name = format!("{method} {route}"),
-        otel.kind = ?opentelemetry::trace::SpanKind::Server,
-        otel.status_code = Empty, // to be set on response
-        trace_id = Empty, // to be set on response
-        request_id = Empty, // to be set
-        exception.message = Empty, // to be set on response
-        user.id = "-", // to be set when user-id is found
+        user.id = "-", // to be set when/if user-id is found
+        user_agent.original = user_agent(req),
     );
     if extract_parent {
         span.set_parent(extract_context(req))
@@ -134,7 +130,9 @@ fn headers<B>(req: &Request<B>) -> String {
     let filtered_headers: HeaderMap<HeaderValue> = req
         .headers()
         .iter()
-        .filter(|(name, _)| *name != "authorization" && *name != "idtoken")
+        .filter(|(name, _)| {
+            *name != "authorization" && *name != "cookie" && name.as_str().contains("token")
+        })
         .map(|(n, v)| (n.clone(), v.clone()))
         .collect();
     format!("{filtered_headers:#?}")

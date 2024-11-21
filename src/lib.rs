@@ -42,13 +42,9 @@ where
         opentelemetry_sdk::propagation::TraceContextPropagator::new(),
     );
 
-    let exporter = SpanExporter::builder().with_http().build();
-
-    if exporter.is_err() {
-        None
-    } else {
+    if let Ok(exporter) = SpanExporter::builder().with_http().build() {
         let provider = sdk::trace::TracerProvider::builder()
-            .with_batch_exporter(exporter.unwrap(), opentelemetry_sdk::runtime::Tokio)
+            .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
             .with_config(
                 Config::default().with_sampler(Sampler::ParentBased(Box::new(
                     Sampler::TraceIdRatioBased(sample_rate),
@@ -56,10 +52,11 @@ where
             )
             .build();
         let tracer = provider.tracer("axum-otlp-honeycomb");
-
-        let l = tracing_opentelemetry::layer()
-            .with_error_records_to_exceptions(true)
+        let layer = tracing_opentelemetry::layer()
+            .with_level(true)
             .with_tracer(tracer);
-        Some(l)
+        Some(layer)
+    } else {
+        None
     }
 }

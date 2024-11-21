@@ -1,3 +1,12 @@
+## v0.3.0
+Released 2024-11-21
+
+* Remove the `HONEYCOMB_API_KEY` and instead use the recommended
+`OTEL_EXPORTER_OTLP_HEADERS`  with `x-honeycomb-team=<the value of the Honeycomb Ingress API KEY>`
+
+* Cleanup of the code
+
+* Improve the README and docs.
 ## v0.2.0
 Released 2024-11-21
 

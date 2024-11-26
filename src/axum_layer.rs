@@ -131,7 +131,7 @@ fn headers<B>(req: &Request<B>) -> String {
         .headers()
         .iter()
         .filter(|(name, _)| {
-            *name != "authorization" && *name != "cookie" && name.as_str().contains("token")
+            *name != "authorization" && *name != "cookie" && !name.as_str().contains("token")
         })
         .map(|(n, v)| (n.clone(), v.clone()))
         .collect();

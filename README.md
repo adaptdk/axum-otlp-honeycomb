@@ -26,7 +26,7 @@ cargo add clap --features cargo
 
 Where you create your tracing_subscriber do this:
 ```
-use axum_otlp_honeycomb::init_otlp_layer;
+use axum_otlp_honeycomb::{init_otlp_layer, init_otlp_log_layer};
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::filter::EnvFilter;
 use tracing_subscriber::prelude::*;
@@ -56,10 +56,20 @@ tracing_subscriber::Registry::default()
             .with_filter(EnvFilter::from_default_env()),
     )
     .with(init_otlp_layer(sample_rate).with_filter(LevelFilter::INFO))
+    .with(init_otlp_log_layer().with_filter(LevelFilter::INFO))
     .init();
 ```
 The first `.with` is for local logging to eg Platform.sh's `app.log`. The log-level
 is set by the `RUST_LOG` environment variable.
+
+The second `.with` is for tracing to Honeycomb. `LevelFilter::INFO` ensures that tracing
+done with `#[tracing::instrument]` is forwarded. Logging with `LevelFilter::DEBUG` gives
+traces for just too much.
+
+The third `.with` is for forwarding events to Honeycomb's Logs. Again the `LevelFilter::WARN`
+ensures that only relevant events are forwarded.
+
+**NOTE**: Any event field named **`body`** will overwrite the event message.
 
 ### Add layers to Axum app
 

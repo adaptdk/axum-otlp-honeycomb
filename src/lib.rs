@@ -1,19 +1,22 @@
 //! Crate for connecting tracing in Axum via the Opengtelemetry-otlp
 //! protocol to Honeycomb.
 
+use event_logger::AxumOtelEventLogger;
 use opentelemetry::trace::TracerProvider as _;
-use opentelemetry_otlp::SpanExporter;
+use opentelemetry_otlp::{LogExporter, SpanExporter};
 use opentelemetry_sdk::{
     self as sdk,
+    logs::{Logger, LoggerProvider},
     trace::{Config, Sampler, Tracer},
 };
 use tracing_core::Subscriber;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::registry::LookupSpan;
 mod axum_layer;
+mod event_logger;
 pub use axum_layer::{opentelemetry_tracing_layer, opentelemetry_tracing_layer_without_parent};
 
-/// Creates a layer that can be added to a `tracing_subscriber`like this
+/// Creates a tracing layer that can be added to a `tracing_subscriber`like this
 ///
 /// ```
 /// let sample_rate = 0.01;  // 1%
@@ -59,4 +62,28 @@ where
     } else {
         None
     }
+}
+
+/// Creates an event logging layer that can be added to a `tracing_subscriber`like this
+///
+/// ```
+/// tracing_subscriber::Registry::default()
+///    .with(init_otlp_log_ layer().with_filter(LevelFilter::INFO))
+///    .init();
+/// ```
+///
+/// This layer sends events (with level greater than or equal to INFO) onwards
+/// to Honeycomb as Logs.
+///
+/// IMPORTANT: The body of the event is defined by the `log` and `tracing` crates
+/// to be in the field `message`.  In `opentelemetry` this is moved to the `body`
+/// field. Any field in the event with the name `body` will overwrite the event message.
+///
+/// Expects the same environment variables as `init_otlp_log_layer()`
+pub fn init_otlp_log_layer() -> AxumOtelEventLogger<LoggerProvider, Logger> {
+    let exporter = LogExporter::builder().with_http().build().unwrap();
+    let provider = sdk::logs::LoggerProvider::builder()
+        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+        .build();
+    AxumOtelEventLogger::new(&provider)
 }

@@ -1,3 +1,13 @@
+## v0.4.0
+Released 2025-05-23
+
+* Upgrades:
+  - Axum to 0.8
+  - Opentelemetry to 0.29
+  - Rust edition to 2024
+  - and all other dependencies to latest
+* Use feature `reqwest-blocking-client` in opentelemetry, as that seems to give fever problems.
+
 ## v0.3.0
 Released 2024-11-21
 
@@ -12,7 +22,7 @@ Released 2024-11-21
 
 * Breaking: Added `sample_rate` argument to `init_otlp_layer`.
 
-Sets the fraction of trtaces that are sampled and forwarded to Honeycomb.
+Sets the fraction of traces that are sampled and forwarded to Honeycomb.
 
 * Added `.gitignore`
 

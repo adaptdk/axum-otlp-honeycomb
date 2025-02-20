@@ -135,7 +135,7 @@ impl<'a, LR: LogRecord> EventVisitor<'a, LR> {
     }
 }
 
-impl<'a, LR: LogRecord> tracing::field::Visit for EventVisitor<'a, LR> {
+impl<LR: LogRecord> tracing::field::Visit for EventVisitor<'_, LR> {
     fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
         if field.name() == "message" {
             self.log_record.set_body(format!("{:?}", value).into());

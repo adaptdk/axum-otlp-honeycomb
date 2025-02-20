@@ -6,8 +6,8 @@ use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_otlp::{LogExporter, SpanExporter};
 use opentelemetry_sdk::{
     self as sdk,
-    logs::{Logger, LoggerProvider},
-    trace::{Config, Sampler, Tracer},
+    logs::{SdkLogger, SdkLoggerProvider},
+    trace::{Sampler, Tracer},
 };
 use tracing_core::Subscriber;
 use tracing_opentelemetry::OpenTelemetryLayer;
@@ -46,13 +46,11 @@ where
     );
 
     if let Ok(exporter) = SpanExporter::builder().with_http().build() {
-        let provider = sdk::trace::TracerProvider::builder()
-            .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
-            .with_config(
-                Config::default().with_sampler(Sampler::ParentBased(Box::new(
+        let provider = sdk::trace::SdkTracerProvider::builder()
+            .with_batch_exporter(exporter)
+            .with_sampler(Sampler::ParentBased(Box::new(
                     Sampler::TraceIdRatioBased(sample_rate),
-                ))),
-            )
+                )))
             .build();
         let tracer = provider.tracer("axum-otlp-honeycomb");
         let layer = tracing_opentelemetry::layer()
@@ -80,10 +78,10 @@ where
 /// field. Any field in the event with the name `body` will overwrite the event message.
 ///
 /// Expects the same environment variables as `init_otlp_log_layer()`
-pub fn init_otlp_log_layer() -> AxumOtelEventLogger<LoggerProvider, Logger> {
+pub fn init_otlp_log_layer() -> AxumOtelEventLogger<SdkLoggerProvider, SdkLogger> {
     let exporter = LogExporter::builder().with_http().build().unwrap();
-    let provider = sdk::logs::LoggerProvider::builder()
-        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+    let provider = sdk::logs::SdkLoggerProvider::builder()
+        .with_batch_exporter(exporter)
         .build();
     AxumOtelEventLogger::new(&provider)
 }

@@ -5,22 +5,22 @@ version = "0.3.3"
 edition = "2021"
 
 [dependencies]
-axum = "0.7"
+axum = "0.8"
 clap = { version = "4", features = ["cargo"] }
 futures-util = "0.3"
 http = "1"
-opentelemetry = { version = "0.27", features = [
+opentelemetry = { version = "0.28", features = [
     "trace",
 ], default-features = false }
-opentelemetry-appender-tracing = "0.27.0"
-opentelemetry-http = "0.27"
-opentelemetry-otlp = { version = "0.27", features = [
+opentelemetry-appender-tracing = "0.28"
+opentelemetry-http = "0.28"
+opentelemetry-otlp = { version = "0.28", features = [
     "reqwest-client",
     "reqwest-rustls",
     "http-proto",
     "logs",
 ], default-features = false }
-opentelemetry_sdk = { version = "0.27", features = [
+opentelemetry_sdk = { version = "0.28", features = [
     "trace",
     "rt-tokio",
 ], default-features = false }
@@ -28,5 +28,5 @@ pin-project-lite = "0.2"
 tower = "0.5"
 tracing = "0.1"
 tracing-core = "0.1"
-tracing-opentelemetry = "0.28"
+tracing-opentelemetry = "0.29"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

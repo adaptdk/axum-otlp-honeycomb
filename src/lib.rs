@@ -45,12 +45,15 @@ where
         opentelemetry_sdk::propagation::TraceContextPropagator::new(),
     );
 
-    if let Ok(exporter) = SpanExporter::builder().with_http().build() {
+    if let Ok(exporter) = SpanExporter::builder()
+        .with_http()
+        .build()
+    {
         let provider = sdk::trace::SdkTracerProvider::builder()
             .with_batch_exporter(exporter)
-            .with_sampler(Sampler::ParentBased(Box::new(
-                    Sampler::TraceIdRatioBased(sample_rate),
-                )))
+            .with_sampler(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
+                sample_rate,
+            ))))
             .build();
         let tracer = provider.tracer("axum-otlp-honeycomb");
         let layer = tracing_opentelemetry::layer()
@@ -79,7 +82,10 @@ where
 ///
 /// Expects the same environment variables as `init_otlp_log_layer()`
 pub fn init_otlp_log_layer() -> AxumOtelEventLogger<SdkLoggerProvider, SdkLogger> {
-    let exporter = LogExporter::builder().with_http().build().unwrap();
+    let exporter = LogExporter::builder()
+        .with_http()
+        .build()
+        .unwrap();
     let provider = sdk::logs::SdkLoggerProvider::builder()
         .with_batch_exporter(exporter)
         .build();

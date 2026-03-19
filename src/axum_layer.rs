@@ -10,7 +10,7 @@ use pin_project_lite::pin_project;
 use std::{
     collections::HashMap, error::Error, future::Future, pin::Pin, task::Poll, time::Instant,
 };
-use tracing::{field::Empty, info_span, Span};
+use tracing::{Span, field::Empty, info_span};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 /// function to create the tracing layer
@@ -120,7 +120,7 @@ fn make_span<B>(req: &Request<B>, extract_parent: bool) -> Span {
         user_agent.original = user_agent(req),
     );
     if extract_parent {
-        span.set_parent(extract_context(req))
+        span.set_parent(extract_context(req)).ok();
     }
     span
 }

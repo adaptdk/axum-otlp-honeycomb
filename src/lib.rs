@@ -46,8 +46,13 @@ where
     );
 
     if let Ok(exporter) = SpanExporter::builder().with_http().build() {
+        let sample_rate_n = (1.0 / sample_rate).round().max(1.0) as i64;
+        let resource = opentelemetry_sdk::Resource::builder()
+            .with_attribute(opentelemetry::KeyValue::new("SampleRate", sample_rate_n))
+            .build();
         let provider = sdk::trace::SdkTracerProvider::builder()
             .with_batch_exporter(exporter)
+            .with_resource(resource)
             .with_sampler(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
                 sample_rate,
             ))))

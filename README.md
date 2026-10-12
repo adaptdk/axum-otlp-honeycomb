@@ -2,6 +2,8 @@
 
 Creates a connection from an Axum server to a Honeycomb collector.
 
+Note: The version of this crate is aligned with the version of the OpenTelemetry crates used.
+
 ## Environment variables
 
 The following environment variables are used:

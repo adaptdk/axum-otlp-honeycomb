@@ -3,23 +3,26 @@
 
 use event_logger::AxumOtelEventLogger;
 use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::{LogExporter, SpanExporter};
 use opentelemetry_sdk::{
     self as sdk,
     logs::{SdkLogger, SdkLoggerProvider},
-    trace::{Sampler, Tracer},
+    propagation::TraceContextPropagator,
+    trace::{Sampler, SdkTracerProvider, Tracer},
 };
 use tracing_core::Subscriber;
 use tracing_opentelemetry::OpenTelemetryLayer;
 use tracing_subscriber::registry::LookupSpan;
+
+use crate::axum_layer::AxumOtelLayer;
 mod axum_layer;
 mod event_logger;
-pub use axum_layer::{opentelemetry_tracing_layer, opentelemetry_tracing_layer_without_parent};
 
 /// Creates a tracing layer that can be added to a `tracing_subscriber`like this
 ///
 /// ```
-/// let sample_rate = 0.01;  // 1%
+/// let sample_rate = 0.02;  // 2%
 /// tracing_subscriber::Registry::default()
 ///    .with(init_otlp_layer(sample_rate).with_filter(LevelFilter::INFO))
 ///    .init();
@@ -89,4 +92,93 @@ pub fn init_otlp_log_layer() -> AxumOtelEventLogger<SdkLoggerProvider, SdkLogger
         .with_batch_exporter(exporter)
         .build();
     AxumOtelEventLogger::new(&provider)
+}
+
+/// Creates a tracing layer that can be added to a `tracing_subscriber`like this
+///
+/// ```
+/// tracing_subscriber::Registry::default()
+///    .with(init_refinery_otlp_layer().with_filter(LevelFilter::INFO))
+///    .init();
+/// ```
+///
+/// Also sets a `text_map_propagator` to enable propagation
+/// of context between services.
+///
+/// Expects the following environment variables:
+/// *  `HONEYCOMB_API_KEY` contains
+///    the API key for the Honeycomb environment that traces should be sent to
+/// *  `OTEL_EXPORTER_OTLP_ENDPOINT` contains the endpoint for Honeycomb -
+///    eg `https://refinery.local:8080/`
+/// *  `OTEL_SERVICE_NAME` contains the service name - eg `clap::crate_name!()`.
+///
+/// Spans to Honeycomb. Events inside a span become span events; `error!` marks the span as failed.
+pub fn init_refinery_otlp_layer<S>() -> Option<OpenTelemetryLayer<S, Tracer>>
+where
+    S: Subscriber + for<'span> LookupSpan<'span>,
+{
+    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
+    let exporter = SpanExporter::builder().with_http().build().ok()?;
+    let provider = SdkTracerProvider::builder()
+        .with_batch_exporter(exporter)
+        .build();
+    Some(tracing_opentelemetry::layer().with_tracer(provider.tracer("axum-otlp-honeycomb")))
+}
+
+/// Creates an event logging layer that can be added to a `tracing_subscriber`like this
+///
+/// ```
+/// tracing_subscriber::Registry::default()
+///    .with(init_refinery_otlp_log_layer().with_filter(LevelFilter::INFO))
+///    .init();
+/// ```
+///
+/// Every `tracing` event (error!/warn!/info!) to Honeycomb as a log, linked to its trace.
+///
+/// IMPORTANT: The body of the event is defined by the `log` and `tracing` crates
+/// to be in the field `message`.  In `opentelemetry` this is moved to the `body`
+/// field. Any field in the event with the name `body` will overwrite the event message.
+///
+pub fn init_refinery_otlp_log_layer()
+-> Option<OpenTelemetryTracingBridge<SdkLoggerProvider, SdkLogger>> {
+    let exporter = LogExporter::builder().with_http().build().ok()?;
+    let provider = SdkLoggerProvider::builder()
+        .with_batch_exporter(exporter)
+        .build();
+    Some(OpenTelemetryTracingBridge::new(&provider))
+}
+
+/// function to create the tracing layer for Axum
+///
+/// This layer extracts the parent span from the request, if one exists.
+///
+/// ```
+/// axum::Router::new()
+///     .route("/", axum::routing::get(|| async {  }))
+///     ...
+///     .layer(axum_otlp_honeycomb::opentelemetry_tracing_layer())
+/// ```
+#[must_use]
+#[allow(unused)]
+pub fn opentelemetry_tracing_layer() -> AxumOtelLayer {
+    AxumOtelLayer {
+        extract_parent: true,
+    }
+}
+
+/// function to create the tracing layer for Axum without
+/// extraction of parent span
+///
+/// ```
+/// axum::Router::new()
+///     .route("/", axum::routing::get(|| async {  }))
+///     ...
+///     .layer(axum_otlp_honeycomb::opentelemetry_tracing_layer_without_parent())
+/// ```
+#[must_use]
+#[allow(unused)]
+pub fn opentelemetry_tracing_layer_without_parent() -> AxumOtelLayer {
+    AxumOtelLayer {
+        extract_parent: false,
+    }
 }

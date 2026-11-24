@@ -13,25 +13,6 @@ use std::{
 use tracing::{Span, field::Empty, info_span};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-/// function to create the tracing layer
-#[must_use]
-#[allow(unused)]
-pub fn opentelemetry_tracing_layer() -> AxumOtelLayer {
-    AxumOtelLayer {
-        extract_parent: true,
-    }
-}
-
-/// function to create the tracing layer without
-/// extraction of parent span
-#[must_use]
-#[allow(unused)]
-pub fn opentelemetry_tracing_layer_without_parent() -> AxumOtelLayer {
-    AxumOtelLayer {
-        extract_parent: false,
-    }
-}
-
 /// layer/middleware for axum:
 ///
 /// - propagate `OpenTelemetry` context (`trace_id`,...) to server
@@ -40,7 +21,7 @@ pub fn opentelemetry_tracing_layer_without_parent() -> AxumOtelLayer {
 /// `OpenTelemetry` context is extracted from tracing's span.
 #[derive(Default, Debug, Clone)]
 pub struct AxumOtelLayer {
-    extract_parent: bool,
+    pub extract_parent: bool,
 }
 
 impl<S> tower::Layer<S> for AxumOtelLayer {
